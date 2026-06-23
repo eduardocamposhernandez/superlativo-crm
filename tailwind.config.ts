@@ -6,18 +6,43 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Marca principal: Esmeralda (#3fbf8f) — cambiar aquí afecta TODO
+        // Marca principal del CRM: Esmeralda (#3fbf8f)
         marca: {
           50: "#ecfdf5",
           100: "#d1fae5",
           200: "#a7f3d0",
           300: "#6ee7b7",
           400: "#34d399",
-          500: "#3fbf8f", // color principal
+          500: "#3fbf8f",
           600: "#10b981",
           700: "#047857",
           800: "#065f46",
           900: "#064e3b",
+        },
+        // Paleta de la LANDING pública (identidad Superlativo)
+        noche: {
+          900: "#070f1e",
+          800: "#0a1428",
+          700: "#0f1c3a",
+          600: "#16264d",
+          500: "#1f3164",
+        },
+        lima: {
+          50: "#f7fbe8",
+          100: "#edf6c8",
+          200: "#dbed95",
+          300: "#c3df5a",
+          400: "#b6d62c",
+          500: "#a4c41a", // verde lima principal
+          600: "#7f9c14",
+          700: "#637713",
+          800: "#506015",
+        },
+        plata: {
+          100: "#f3f4f6",
+          200: "#e5e7eb",
+          300: "#d1d5db",
+          400: "#9ca3af",
         },
         superficie: {
           DEFAULT: "rgb(var(--color-superficie) / <alpha-value>)",
@@ -41,6 +66,7 @@ const config: Config = {
       },
       fontFamily: {
         sans: ["var(--font-sans)", "system-ui", "sans-serif"],
+        serif: ["var(--font-serif)", "Georgia", "serif"],
       },
       borderRadius: {
         xs: "0.25rem",

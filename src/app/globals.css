@@ -171,6 +171,46 @@ html.cambiando-tema * {
            hover:text-marca-600 hover:underline underline-offset-2
            transition-colors duration-100;
   }
+
+  /* ── Landing pública (identidad Superlativo) ──────────────────── */
+
+  /* Efecto plateado para títulos importantes */
+  .titulo-plata {
+    background: linear-gradient(180deg, #f8fafc 0%, #cbd5e1 60%, #94a3b8 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.05);
+  }
+
+  /* Acento en verde lima para palabras clave */
+  .titulo-lima {
+    background: linear-gradient(180deg, #c3df5a 0%, #a4c41a 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Tarjeta de la landing (fondo navy con borde sutil) */
+  .tarjeta-landing {
+    @apply rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-sm;
+  }
+
+  /* Botón principal de la landing (verde lima) */
+  .boton-lima {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-6 py-4
+           bg-lima-500 text-noche-900 font-semibold text-base
+           transition-all duration-150 select-none min-h-[52px]
+           hover:bg-lima-400 hover:shadow-[0_8px_24px_-8px_rgba(164,196,26,0.45)]
+           active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-lima-300;
+  }
+
+  .boton-fantasma-claro {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-6 py-4
+           border border-white/20 bg-white/[0.03] text-white font-medium text-base
+           transition-all duration-150 min-h-[52px]
+           hover:bg-white/[0.08] hover:border-white/30;
+  }
 }
 
 /* ─── Anti-flash al cargar (aplicar tema antes de pintar) ──────── */

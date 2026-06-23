@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { ProveedorTema } from "@/components/proveedor-tema";
 import { ProveedorToast } from "@/components/ui/toast";
@@ -8,6 +8,12 @@ import { ProveedorConfirmar } from "@/components/ui/confirmar";
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-sans",
+  display: "swap",
+});
+
+const playfair = Playfair_Display({
+  subsets: ["latin"],
+  variable: "--font-serif",
   display: "swap",
 });
 
@@ -55,7 +61,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="es" suppressHydrationWarning className={inter.variable}>
+    <html lang="es" suppressHydrationWarning className={`${inter.variable} ${playfair.variable}`}>
       <head>
         <script dangerouslySetInnerHTML={{ __html: scriptTema }} />
       </head>
