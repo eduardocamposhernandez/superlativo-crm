@@ -1,10 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
 import {
-  Compass,
-  Flame,
-  Lightbulb,
-  Network,
   MessageCircle,
   Mail,
   ChevronRight,
@@ -71,7 +67,12 @@ function BarraSuperior() {
     <header className="sticky top-0 z-30 border-b border-white/5 bg-noche-900/85 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
         <Link href="/" className="flex items-center gap-2">
-          <span className="font-serif text-xl font-bold tracking-wide">Superlativo</span>
+          <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg bg-white">
+            <Image src="/logos/logo.png" alt="Superlativo" width={40} height={40} className="h-full w-full object-contain p-1" />
+          </div>
+          <span className="font-serif text-xl font-bold tracking-wide">
+            <span className="text-lima-400">S</span>uperlativo
+          </span>
         </Link>
         <nav className="hidden items-center gap-7 text-sm text-white/80 lg:flex">
           <a href="#ecosistema" className="hover:text-lima-400">Ecosistema</a>
@@ -217,7 +218,7 @@ function Ecosistema() {
       lema: "Para jóvenes decidiendo su futuro",
       texto:
         "Acompañamiento profundo para jóvenes que buscan definir su camino profesional. Transformamos la confusión y la presión en una decisión vocacional fundamentada en el autoconocimiento real.",
-      Icono: Compass,
+      logo: "/logos/rutasuperlativa.png",
       acento: "text-lima-400",
       tagline: "Claridad es plenitud",
     },
@@ -227,7 +228,7 @@ function Ecosistema() {
       lema: "Reinvención para la adultez",
       texto:
         "Mentoría estratégica para adultos en transición. Un proceso para quienes necesitan reinventarse, recuperar el control de sus decisiones y trazar una segunda o tercera etapa de vida con propósito.",
-      Icono: Flame,
+      logo: "/logos/superlativofenix.png",
       acento: "text-amber-400",
       tagline: "Es tiempo de reinventarse",
     },
@@ -237,7 +238,7 @@ function Ecosistema() {
       lema: "Conferencias y divulgación",
       texto:
         "El brazo de perspectiva del ecosistema. Conferencias magistrales, paneles y contenidos para instituciones educativas, foros y comunidades que requieren elevar la conversación sobre el futuro, las decisiones vitales y el liderazgo.",
-      Icono: Lightbulb,
+      logo: "/logos/superlativofaro.png",
       acento: "text-sky-300",
       tagline: "Capacidades que transforman vidas",
     },
@@ -247,7 +248,7 @@ function Ecosistema() {
       lema: "Para instituciones y organizaciones",
       texto:
         "Capa corporativa e institucional. Procesos de consultoría y formación para equipos de trabajo, ayudando a alinear el talento individual con los objetivos macro de la organización. Aportamos cohesión, claridad estratégica y herramientas de liderazgo.",
-      Icono: Network,
+      logo: "/logos/superlativonexus.png",
       acento: "text-orange-300",
       tagline: "Colaboración que se vuelve fuerza",
     },
@@ -266,19 +267,25 @@ function Ecosistema() {
           </p>
         </div>
         <div className="grid gap-5 sm:grid-cols-2">
-          {pilares.map(({ id, titulo, lema, texto, Icono, acento, tagline }) => (
+          {pilares.map(({ id, titulo, lema, texto, logo, acento, tagline }) => (
             <a
               key={id}
               href={`#${id}`}
               className="tarjeta-landing group p-7 transition-all hover:border-lima-500/30 hover:bg-white/[0.05]"
             >
-              <div className="mb-4 flex items-center gap-3">
-                <span className={`inline-flex h-12 w-12 items-center justify-center rounded-xl bg-white/5 ${acento}`}>
-                  <Icono className="h-6 w-6" aria-hidden />
-                </span>
-                <div>
+              <div className="mb-4 flex items-start gap-4">
+                <div className="flex h-20 w-20 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white shadow-lg">
+                  <Image
+                    src={logo}
+                    alt={titulo}
+                    width={80}
+                    height={80}
+                    className="h-full w-full object-contain p-2"
+                  />
+                </div>
+                <div className="flex-1">
                   <h3 className="font-serif text-xl text-white">{titulo}</h3>
-                  <p className="text-xs uppercase tracking-wider text-white/40">{lema}</p>
+                  <p className="mt-1 text-xs uppercase tracking-wider text-white/40">{lema}</p>
                 </div>
               </div>
               <p className="text-sm leading-relaxed text-white/70">{texto}</p>
@@ -709,8 +716,15 @@ function Footer() {
     <footer className="border-t border-white/5 bg-noche-900 py-12">
       <div className="mx-auto grid max-w-6xl gap-8 px-4 sm:grid-cols-3 sm:px-6">
         <div>
-          <p className="font-serif text-xl font-bold text-white">Superlativo</p>
-          <p className="mt-2 font-serif italic text-lima-300">&ldquo;Claridad es plenitud.&rdquo;</p>
+          <div className="mb-3 flex items-center gap-3">
+            <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-lg bg-white">
+              <Image src="/logos/logo.png" alt="Superlativo" width={48} height={48} className="h-full w-full object-contain p-1" />
+            </div>
+            <p className="font-serif text-xl font-bold text-white">
+              <span className="text-lima-400">S</span>uperlativo
+            </p>
+          </div>
+          <p className="font-serif italic text-lima-300">&ldquo;Claridad es plenitud.&rdquo;</p>
           <p className="mt-3 text-xs text-white/40">León, Guanajuato · México</p>
         </div>
         <div>
