@@ -1,0 +1,377 @@
+// ─────────────────────────────────────────────────────────────────────
+// SUPERLATIVO CRM — esquema de base de datos
+// Local: SQLite (file:./dev.db)
+// Producción: Postgres (cambia provider a "postgresql" antes de deploy)
+//
+// Nota: usamos String para "enums" porque SQLite no soporta enums.
+// Los valores válidos están documentados en cada campo Y validados
+// por Zod en cada API. Los TypeScript types también los enumeran.
+// ─────────────────────────────────────────────────────────────────────
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Usuarios y autenticación ─────────────────────────────────────────
+// Rol válidos: "ADMIN" | "VENDEDOR" | "SOLO_LECTURA"
+
+model Usuario {
+  id                    String   @id @default(cuid())
+  correo                String   @unique
+  contrasenaHash        String
+  nombre                String
+  rol                   String   @default("VENDEDOR")
+  activo                Boolean  @default(true)
+  slugAgenda            String?  @unique
+  metaMensual           Float    @default(0)
+  metaClientesMensual   Int      @default(0)
+  comisionPorcentaje    Float    @default(0)
+  temaPreferido         String   @default("auto")
+  onboardingCompletado  Boolean  @default(false)
+  intentosFallidos      Int      @default(0)
+  bloqueadoHasta        DateTime?
+  creadoEn              DateTime @default(now())
+  actualizadoEn         DateTime @updatedAt
+
+  clientes              Cliente[]            @relation("VendedorDeCliente")
+  citas                 Cita[]               @relation("VendedorDeCita")
+  pagos                 Pago[]               @relation("RegistradosPor")
+  notas                 Nota[]
+  acciones              RegistroAuditoria[]
+  recordatorios         Recordatorio[]
+  archivos              Archivo[]
+  plantillas            Plantilla[]
+  favoritos             Favorito[]
+  vistasGuardadas       VistaGuardada[]
+  configMensajes        ConfigMensajeria[]
+  sesiones              Sesion[]
+
+  @@index([correo])
+  @@index([slugAgenda])
+}
+
+model Sesion {
+  id           String   @id @default(cuid())
+  usuarioId    String
+  token        String   @unique
+  expiraEn     DateTime
+  creadaEn     DateTime @default(now())
+  usuario      Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([usuarioId])
+}
+
+// ─── Clientes (núcleo) ────────────────────────────────────────────────
+// etapa válidos: NUEVO|CONTACTADO|CITA_AGENDADA|PROPUESTA_ENVIADA|SEGUIMIENTO|GANADO|PERDIDO
+// estadoCartera válidos: ACTIVO|GANADO|PERDIDO|ARCHIVADO
+// temperatura válidos: CALIENTE|TIBIO|FRIO|null
+
+model Cliente {
+  id                String   @id @default(cuid())
+  nombre            String
+  telefono          String?
+  correo            String?
+  origen            String?
+  canalUtm          String?
+  etapa             String   @default("NUEVO")
+  estadoCartera     String   @default("ACTIVO")
+  temperatura       String?
+  objecion          String?
+  valorEstimado     Float    @default(0)
+  servicioInteres   String?
+  tipoContacto      String?
+  notas             String?
+
+  primerContacto    DateTime?
+  ultimoContacto    DateTime?
+  proximaAccion     String?
+  proximaAccionEn   DateTime?
+
+  empresaNombre     String?
+  empresaGiro       String?
+  empresaPuesto     String?
+  empresaRfc        String?
+  empresaSitioWeb   String?
+  empresaDireccion  String?
+  empresaTamano     String?
+  empresaNotas      String?
+
+  motivoPerdida     String?
+  resultadoFinal    String?
+
+  etapaAnterior     String?
+
+  vendedorId        String?
+  vendedor          Usuario? @relation("VendedorDeCliente", fields: [vendedorId], references: [id])
+
+  eliminadoEn       DateTime?
+
+  creadoEn          DateTime @default(now())
+  actualizadoEn     DateTime @updatedAt
+
+  citas             Cita[]
+  pagos             Pago[]
+  notasLista        Nota[]
+  archivos          Archivo[]
+  eventos           EventoLineaTiempo[]
+  recordatorios     Recordatorio[]
+  etiquetas         EtiquetaEnCliente[]
+  favoritos         Favorito[]
+
+  @@index([nombre])
+  @@index([telefono])
+  @@index([correo])
+  @@index([empresaNombre])
+  @@index([etapa])
+  @@index([estadoCartera])
+  @@index([vendedorId])
+  @@index([eliminadoEn])
+  @@index([proximaAccionEn])
+  @@index([temperatura])
+}
+
+// ─── Citas / Agenda ───────────────────────────────────────────────────
+// estado válidos: AGENDADA|CONFIRMADA|REALIZADA|CANCELADA|NO_ASISTIO
+
+model Cita {
+  id                String     @id @default(cuid())
+  clienteId         String?
+  cliente           Cliente?   @relation(fields: [clienteId], references: [id], onDelete: SetNull)
+  vendedorId        String
+  vendedor          Usuario    @relation("VendedorDeCita", fields: [vendedorId], references: [id])
+  inicio            DateTime
+  duracionMin       Int        @default(30)
+  estado            String     @default("AGENDADA")
+  titulo            String?
+  notas             String?
+  ligaMeet          String?
+  googleEventId     String?
+  nombreInvitado    String?
+  telefonoInvitado  String?
+  correoInvitado    String?
+
+  eliminadoEn       DateTime?
+  creadaEn          DateTime   @default(now())
+
+  @@index([vendedorId, inicio])
+  @@index([clienteId])
+  @@index([eliminadoEn])
+}
+
+// ─── Pagos ────────────────────────────────────────────────────────────
+// estado válidos: PENDIENTE|PAGADO|VENCIDO
+
+model Pago {
+  id              String     @id @default(cuid())
+  clienteId       String
+  cliente         Cliente    @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  registradoPorId String?
+  registradoPor   Usuario?   @relation("RegistradosPor", fields: [registradoPorId], references: [id])
+  monto           Float
+  moneda          String     @default("MXN")
+  metodo          String
+  concepto        String?
+  estado          String     @default("PENDIENTE")
+  fechaPago       DateTime?
+  fechaVencimiento DateTime?
+  folioRecibo     String?
+  eliminadoEn     DateTime?
+  creadoEn        DateTime   @default(now())
+
+  @@index([clienteId])
+  @@index([estado])
+  @@index([fechaPago])
+  @@index([fechaVencimiento])
+  @@index([eliminadoEn])
+}
+
+// ─── Notas / Línea de tiempo / Auditoría ─────────────────────────────
+
+model Nota {
+  id          String   @id @default(cuid())
+  clienteId   String
+  cliente     Cliente  @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  usuarioId   String?
+  usuario     Usuario? @relation(fields: [usuarioId], references: [id])
+  contenido   String
+  eliminadoEn DateTime?
+  creadaEn    DateTime @default(now())
+
+  @@index([clienteId])
+}
+
+model EventoLineaTiempo {
+  id          String   @id @default(cuid())
+  clienteId   String
+  cliente     Cliente  @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  tipo        String
+  titulo      String
+  detalle     String?
+  autorId     String?
+  autorNombre String?
+  ocurridoEn  DateTime @default(now())
+
+  @@index([clienteId, ocurridoEn])
+}
+
+model RegistroAuditoria {
+  id          String   @id @default(cuid())
+  usuarioId   String?
+  usuario     Usuario? @relation(fields: [usuarioId], references: [id])
+  accion      String
+  recursoTipo String
+  recursoId   String?
+  resumen     String
+  ip          String?
+  ocurridoEn  DateTime @default(now())
+
+  @@index([usuarioId])
+  @@index([ocurridoEn])
+  @@index([recursoTipo, recursoId])
+}
+
+// ─── Archivos ────────────────────────────────────────────────────────
+
+model Archivo {
+  id            String   @id @default(cuid())
+  clienteId     String
+  cliente       Cliente  @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  subidoPorId   String?
+  subidoPor     Usuario? @relation(fields: [subidoPorId], references: [id])
+  nombre        String
+  etiqueta      String   @default("Otro")
+  tipoMime      String
+  tamanoBytes   Int
+  contenidoBase String?
+  url           String?
+  eliminadoEn   DateTime?
+  subidoEn      DateTime @default(now())
+
+  @@index([clienteId])
+}
+
+// ─── Etiquetas, favoritos, vistas guardadas ──────────────────────────
+
+model Etiqueta {
+  id        String              @id @default(cuid())
+  nombre    String              @unique
+  color     String              @default("#3fbf8f")
+  creadaEn  DateTime            @default(now())
+  clientes  EtiquetaEnCliente[]
+}
+
+model EtiquetaEnCliente {
+  id         String   @id @default(cuid())
+  clienteId  String
+  etiquetaId String
+  cliente    Cliente  @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  etiqueta   Etiqueta @relation(fields: [etiquetaId], references: [id], onDelete: Cascade)
+
+  @@unique([clienteId, etiquetaId])
+  @@index([clienteId])
+  @@index([etiquetaId])
+}
+
+model Favorito {
+  id        String  @id @default(cuid())
+  usuarioId String
+  clienteId String
+  usuario   Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  cliente   Cliente @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+
+  @@unique([usuarioId, clienteId])
+}
+
+model VistaGuardada {
+  id        String  @id @default(cuid())
+  usuarioId String
+  nombre    String
+  ruta      String
+  filtros   String
+  usuario   Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  creadaEn  DateTime @default(now())
+}
+
+// ─── Recordatorios y plantillas ──────────────────────────────────────
+
+model Recordatorio {
+  id          String   @id @default(cuid())
+  usuarioId   String
+  clienteId   String?
+  usuario     Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  cliente     Cliente? @relation(fields: [clienteId], references: [id], onDelete: SetNull)
+  texto       String
+  cuando      DateTime
+  hecho       Boolean  @default(false)
+  creadoEn    DateTime @default(now())
+
+  @@index([usuarioId, cuando])
+}
+
+model Plantilla {
+  id         String   @id @default(cuid())
+  usuarioId  String?
+  usuario    Usuario? @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  nombre     String
+  canal      String   @default("whatsapp")
+  asunto     String?
+  cuerpo     String
+  favorita   Boolean  @default(false)
+  etapa      String?
+  objecion   String?
+  creadaEn   DateTime @default(now())
+}
+
+// ─── Configuración del negocio ───────────────────────────────────────
+
+model Configuracion {
+  id                  String   @id @default(cuid())
+  nombreNegocio       String   @default("SUPERLATIVO")
+  colorMarca          String   @default("#3fbf8f")
+  monedaPrincipal     String   @default("MXN")
+  zonaHoraria         String   @default("America/Mexico_City")
+  horarioInicio       String   @default("09:00")
+  horarioFin          String   @default("18:00")
+  duracionCitaMin     Int      @default(30)
+  diasLaborables      String   @default("L,M,X,J,V")
+  metaMensual         Float    @default(30000)
+  metaClientesMensual Int      @default(5)
+  metodosPago         String   @default("Transferencia,Tarjeta,Liga de pago (Stripe/Mercado Pago)")
+  motivosPerdida      String   @default("Precio,Se fue con la competencia,No contestó,No era buen momento,No calificaba,Otro")
+  mensajeWhatsApp     String   @default("")
+  ciudadNegocio       String   @default("León, Guanajuato")
+  umbralEstancamiento Int      @default(7)
+  etapasCustom        String?
+  comisionPorcentaje  Float    @default(0)
+  actualizadaEn       DateTime @updatedAt
+}
+
+model ConfigMensajeria {
+  id        String  @id @default(cuid())
+  usuarioId String  @unique
+  usuario   Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  firma     String  @default("")
+}
+
+// ─── Lead capturado por landing pública ──────────────────────────────
+
+model LeadCapturadoCrudo {
+  id              String   @id @default(cuid())
+  nombre          String
+  telefono        String?
+  correo          String?
+  mensaje         String?
+  origen          String?
+  canalUtm        String?
+  procesado       Boolean  @default(false)
+  errorProceso    String?
+  capturadoEn     DateTime @default(now())
+
+  @@index([procesado])
+}
